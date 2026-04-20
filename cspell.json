@@ -1,7 +1,7 @@
 {
   "version": "0.2",
   "language": "en",
-  "files": ["src/**/*.ts", "**/*.md"],
+  "files": ["packages/*/src/**/*.ts", "**/*.md"],
   "ignorePaths": [
     "node_modules/**",
     "dist/**",

@@ -37,6 +37,16 @@ pnpm exec tsc --noEmit         # just types
 - **Tests colocated:** `foo.ts` and `foo.test.ts` live in the same directory.
 - **Coverage floor:** 70% lines/functions/branches/statements. Raise it as the codebase matures.
 
+## Monorepo layout
+
+This is a pnpm workspace. Source lives under `packages/<name>/src/`, never at the repo root.
+
+- **Cross-package imports go through workspace names**, not relative paths. Use `import { x } from '@repo/other'`, never `import { x } from '../../other/src/x.js'`. The boundary rule in `fallow.toml` is ready to enforce this once uncommented.
+- **Runtime dependencies live in the package that imports them.** Declare them in `packages/<name>/package.json`. Inter-package deps use `"workspace:*"`.
+- **Tooling dependencies live at the root.** Everything in `scripts/check.mjs` (oxlint, ast-grep, cspell, vitest, fallow, stryker, markdownlint, tsc) is a root devDependency. A devDependency inside a package is a smell.
+- **Adding a package:** create `packages/<name>/package.json` (name `@repo/<name>`, `type: module`, `private: true`, `exports`) and `packages/<name>/src/index.ts`. No other files required. `pnpm check` must still exit 0 after adding it.
+- **No per-package configs yet.** Root `tsconfig.json`, `vitest.config.ts`, `fallow.toml`, `cspell.json`, `stryker.config.mjs`, and `rules/` glob across `packages/*/src/**`. Add a per-package override only when one package genuinely needs different behavior.
+
 ## Specs
 
 When a task is non-trivial, look in `.specs/` for an existing spec or be prepared to write one. See `.specs/README.md`. Specs are the canonical source of truth for intent; code is a derived artifact.

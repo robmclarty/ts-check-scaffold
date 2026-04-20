@@ -8,7 +8,7 @@ export default {
   reporters: ['clear-text', 'html', 'json'],
   htmlReporter: { fileName: '.check/mutation/report.html' },
   jsonReporter: { fileName: '.check/mutation/report.json' },
-  mutate: ['src/**/*.ts', '!src/**/*.test.ts', '!src/**/*.spec.ts'],
+  mutate: ['packages/*/src/**/*.ts', '!packages/*/src/**/*.test.ts', '!packages/*/src/**/*.spec.ts'],
   coverageAnalysis: 'perTest',
   thresholds: {
     high: 80,

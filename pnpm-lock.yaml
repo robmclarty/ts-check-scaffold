@@ -45,6 +45,8 @@ importers:
         specifier: 4.1.4
         version: 4.1.4(@types/node@24.12.2)(@vitest/coverage-v8@4.1.4)(vite@8.0.8(@types/node@24.12.2)(yaml@2.8.3))
 
+  packages/core: {}
+
 packages:
 
   '@ast-grep/cli-darwin-arm64@0.42.1':

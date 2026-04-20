@@ -3,7 +3,7 @@ message: Avoid default exports. Named exports give agents stable, discoverable n
 severity: error
 language: typescript
 files:
-  - src/**/*.ts
+  - packages/*/src/**/*.ts
 rule:
   any:
     - pattern: export default $$$

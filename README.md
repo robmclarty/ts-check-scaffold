@@ -2,6 +2,8 @@
 
 A minimal TypeScript/Node scaffold with a modern, agent-friendly `check` pipeline already wired up. Clone, rename, install, go.
 
+Ships as a pnpm workspace monorepo. The first package lives at `packages/core/`; add more under `packages/*/` as the codebase grows.
+
 ## What you get
 
 One command, `pnpm check`, that is the single source of truth for "is this done?". It runs:
@@ -85,10 +87,12 @@ To enable in Claude Code, the `.mcp.json` in the repo root is picked up automati
 **Add an architecture boundary.** Edit `fallow.toml`:
 
 ```toml
-[[boundaries]]
-from = "src/domain/**"
-cannot_import = ["src/infra/**", "src/api/**"]
+[[boundaries.rules]]
+from = "packages/*/src/**"
+cannotImport = ["../*/src/**"]  # no cross-package relative imports; use workspace names
 ```
+
+**Add a package.** Create `packages/<name>/package.json` (name `@repo/<name>`, `type: module`, `private: true`, `exports`) and `packages/<name>/src/index.ts`. All tooling globs across `packages/*/src/**` already, so no other config changes needed.
 
 **Tighten a rule.** Each tool's config lives at the repo root (`.oxlintrc.json`, `fallow.toml`, `stryker.config.mjs`, `sgconfig.yml`, etc). No wrapper configs, no magic.
 

@@ -1,31 +1,29 @@
 # Fallow: dead code, circular deps, duplication, complexity, architecture boundaries.
 # Docs: https://docs.fallow.tools
 
-[entries]
-# Entry points. Adjust to match the project.
-include = ["src/index.ts", "src/**/*.test.ts"]
+entry = ["src/index.ts", "src/**/*.test.ts", "stryker.config.mjs"]
 
-[dead_code]
-unused_exports = "error"
-unused_files = "error"
-unused_deps = "error"
-circular_deps = "error"
-boundary_violations = "error"
+# CLI/tooling deps used via command line or config files, not imported from source.
+ignoreDependencies = ["@ast-grep/cli", "@stryker-mutator/vitest-runner"]
 
-[dupes]
+[rules]
+unused-exports = "error"
+unused-files = "error"
+unused-dependencies = "error"
+circular-dependencies = "error"
+boundary-violation = "error"
+
+[duplicates]
 # mild (default): AST-based, catches copy-paste. semantic: catches renamed variables too.
 mode = "mild"
-min_tokens = 50
-severity = "warn"
+minTokens = 50
 
 [health]
 # Per-function complexity thresholds. Tune to project.
-max_cyclomatic = 15
-max_cognitive = 15
-max_lines = 80
-severity = "warn"
+maxCyclomatic = 15
+maxCognitive = 15
 
 # Architecture boundaries. Uncomment and adapt when module boundaries emerge.
-# [[boundaries]]
+# [[boundaries.rules]]
 # from = "src/domain/**"
-# cannot_import = ["src/infra/**", "src/api/**"]
+# cannotImport = ["src/infra/**", "src/api/**"]

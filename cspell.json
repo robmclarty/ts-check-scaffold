@@ -11,16 +11,21 @@
   ],
   "words": [
     "agnix",
-    "fallow",
-    "markdownlint",
-    "oxlint",
-    "tsgolint",
-    "stryker",
-    "vitest",
+    "Corsa",
     "cspell",
-    "pnpm",
     "esbuild",
+    "fallow",
+    "hotspots",
+    "markdownlint",
+    "noemit",
+    "oxlint",
+    "oxlintrc",
+    "pnpm",
+    "sgconfig",
+    "stabilise",
+    "stryker",
     "tsconfig",
-    "noemit"
+    "tsgolint",
+    "vitest"
   ]
 }

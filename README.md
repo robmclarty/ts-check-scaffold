@@ -4,6 +4,27 @@ A minimal TypeScript/Node scaffold with a modern, agent-friendly `check` pipelin
 
 Ships as a pnpm workspace monorepo. The first package lives at `packages/core/`; add more under `packages/*/` as the codebase grows.
 
+## Layout
+
+```text
+├── packages/
+│   └── core/                 one package; add more as siblings
+│       ├── package.json      name "@repo/core", private, exports ./src/index.ts
+│       └── src/
+│           ├── index.ts      public surface
+│           └── example.{ts,test.ts}
+├── rules/                    ast-grep structural rules
+├── scripts/check.mjs         the check orchestrator
+├── .specs/                   specs (canonical intent, code is derived)
+├── pnpm-workspace.yaml       declares packages/*
+├── tsconfig.json             strict TS, globs packages/*/src/**
+├── fallow.toml  vitest.config.ts  stryker.config.mjs  cspell.json  sgconfig.yml
+├── AGENTS.md  CLAUDE.md      agent contracts
+└── package.json              scripts + all devDependencies live here
+```
+
+All tooling runs from the root and globs across `packages/*/src/**`. Runtime dependencies live in the package that imports them; devDependencies live at the root. Cross-package imports go through workspace names (`@repo/other`), not relative paths.
+
 ## What you get
 
 One command, `pnpm check`, that is the single source of truth for "is this done?". It runs:
@@ -62,6 +83,22 @@ Flags for agent use:
 - `pnpm check --only types,lint` — run a subset during iteration
 - `pnpm check --skip spell,docs` — skip slow or currently-noisy checks
 
+## Working across packages
+
+`pnpm check` always runs over the whole workspace — that's the shipping gate, and it's cheap enough to keep that way. For tighter per-package loops while iterating:
+
+```bash
+pnpm --filter @repo/core test          # run one package's tests
+pnpm --filter @repo/core add zod       # add a runtime dep to one package
+pnpm add -w -D typescript@latest       # upgrade a root devDependency
+```
+
+To add an inter-package dependency, use the workspace protocol:
+
+```bash
+pnpm --filter @repo/app add @repo/core --workspace
+```
+
 ## Fallow MCP server
 
 `.mcp.json` configures `fallow-mcp` so Claude Code / Cursor / Windsurf can call fallow as a structured tool (`analyze`, `check_changed`, `find_dupes`, `check_health`, `fix_preview`, `fix_apply`, `project_info`). Agents get structured diagnostics with `auto_fixable` flags and can self-correct without parsing terminal output.
@@ -92,7 +129,25 @@ from = "packages/*/src/**"
 cannotImport = ["../*/src/**"]  # no cross-package relative imports; use workspace names
 ```
 
-**Add a package.** Create `packages/<name>/package.json` (name `@repo/<name>`, `type: module`, `private: true`, `exports`) and `packages/<name>/src/index.ts`. All tooling globs across `packages/*/src/**` already, so no other config changes needed.
+**Add a package.** Create two files and run install:
+
+```jsonc
+// packages/<name>/package.json
+{
+  "name": "@repo/<name>",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" }
+}
+```
+
+```ts
+// packages/<name>/src/index.ts
+export {};
+```
+
+Then `pnpm install` (to wire the symlink into `node_modules`) and `pnpm check`. No tool-config edits: `tsconfig.json`, `vitest.config.ts`, `fallow.toml`, `cspell.json`, `stryker.config.mjs`, and `rules/` already glob across `packages/*/src/**`.
 
 **Tighten a rule.** Each tool's config lives at the repo root (`.oxlintrc.json`, `fallow.toml`, `stryker.config.mjs`, `sgconfig.yml`, etc). No wrapper configs, no magic.
 

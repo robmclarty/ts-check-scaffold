@@ -1,0 +1,7 @@
+id: no-default-export
+message: Avoid default exports. Named exports give agents stable, discoverable names.
+severity: error
+language: typescript
+rule:
+  any:
+    - pattern: export default $$$

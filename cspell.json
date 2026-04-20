@@ -1,0 +1,26 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "files": ["src/**/*.ts", "**/*.md"],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    ".check/**",
+    "pnpm-lock.yaml",
+    "package.json"
+  ],
+  "words": [
+    "agnix",
+    "fallow",
+    "markdownlint",
+    "oxlint",
+    "tsgolint",
+    "stryker",
+    "vitest",
+    "cspell",
+    "pnpm",
+    "esbuild",
+    "tsconfig",
+    "noemit"
+  ]
+}

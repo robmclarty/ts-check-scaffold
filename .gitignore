@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.check/
+.stryker-tmp/
+coverage/
+*.log
+.DS_Store

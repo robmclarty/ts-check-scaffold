@@ -1,0 +1,31 @@
+# Fallow: dead code, circular deps, duplication, complexity, architecture boundaries.
+# Docs: https://docs.fallow.tools
+
+[entries]
+# Entry points. Adjust to match the project.
+include = ["src/index.ts", "src/**/*.test.ts"]
+
+[dead_code]
+unused_exports = "error"
+unused_files = "error"
+unused_deps = "error"
+circular_deps = "error"
+boundary_violations = "error"
+
+[dupes]
+# mild (default): AST-based, catches copy-paste. semantic: catches renamed variables too.
+mode = "mild"
+min_tokens = 50
+severity = "warn"
+
+[health]
+# Per-function complexity thresholds. Tune to project.
+max_cyclomatic = 15
+max_cognitive = 15
+max_lines = 80
+severity = "warn"
+
+# Architecture boundaries. Uncomment and adapt when module boundaries emerge.
+# [[boundaries]]
+# from = "src/domain/**"
+# cannot_import = ["src/infra/**", "src/api/**"]

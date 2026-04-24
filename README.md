@@ -6,11 +6,16 @@ A TypeScript/Node pnpm workspace scaffold with an agent-friendly `check` pipelin
 
 ```text
 ├── packages/
-│   └── core/                 add more as siblings
-│       ├── package.json      name "@repo/core", private, exports ./src/index.ts
+│   ├── core/                 name "@repo/core", pure library
+│   │   ├── package.json
+│   │   └── src/
+│   │       ├── index.ts
+│   │       └── example.{ts,test.ts}
+│   └── app/                  name "@repo/app", depends on @repo/core
+│       ├── package.json      declares "@repo/core": "workspace:*"
 │       └── src/
 │           ├── index.ts
-│           └── example.{ts,test.ts}
+│           └── greet.{ts,test.ts}
 ├── rules/                    ast-grep structural rules
 ├── scripts/check.mjs         the check orchestrator
 ├── pnpm-workspace.yaml
@@ -28,6 +33,16 @@ Runtime deps live in the package that imports them. DevDeps live at the root. Cr
 pnpm install
 pnpm check
 ```
+
+## First-time setup
+
+After cloning this scaffold into a new project:
+
+1. Rename the root in `package.json` (`"name"`, `"description"`).
+2. Optionally rename the `@repo/*` scope in `packages/*/package.json` (and the matching `"workspace:*"` references).
+3. Replace `LICENSE` with your own (or keep MIT and update the copyright line).
+4. Delete or rework the example code in `packages/*/src/`.
+5. `pnpm install && pnpm check`.
 
 ## The check
 

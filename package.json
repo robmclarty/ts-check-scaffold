@@ -2,6 +2,7 @@
   "name": "ts-check-scaffold",
   "version": "0.1.0",
   "description": "Minimal TypeScript/Node scaffold with a modern agent-friendly check pipeline.",
+  "license": "MIT",
   "type": "module",
   "private": true,
   "engines": {

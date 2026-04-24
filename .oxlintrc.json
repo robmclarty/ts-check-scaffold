@@ -21,5 +21,13 @@
     "no-console": "warn",
     "eqeqeq": "error"
   },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts"],
+      "rules": {
+        "typescript/no-unsafe-type-assertion": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["dist/**", ".check/**", "node_modules/**", "scripts/**"]
 }

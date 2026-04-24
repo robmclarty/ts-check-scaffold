@@ -10,6 +10,7 @@
   },
   "scripts": {
     "check": "node scripts/check.mjs",
+    "check:all": "node scripts/check.mjs --all",
     "check:json": "node scripts/check.mjs --json",
     "check:bail": "node scripts/check.mjs --bail",
     "check:fix": "pnpm exec oxlint --type-aware --fix && pnpm exec fallow fix",

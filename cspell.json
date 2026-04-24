@@ -3,7 +3,7 @@
   "language": "en",
   "files": ["packages/*/src/**/*.ts", "**/*.md"],
   "ignorePaths": [
-    "node_modules/**",
+    "**/node_modules/**",
     "dist/**",
     ".check/**",
     "pnpm-lock.yaml",

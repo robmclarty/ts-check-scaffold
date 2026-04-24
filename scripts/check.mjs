@@ -6,11 +6,13 @@
  * writes an aggregate report to .check/summary.json that agents can parse.
  *
  * Usage:
- *   node scripts/check.mjs                 Run all checks, human-readable output
- *   node scripts/check.mjs --json          Machine-readable output to stdout
- *   node scripts/check.mjs --bail          Stop at the first failure
+ *   node scripts/check.mjs                    Run default checks (excludes opt-in), human-readable output
+ *   node scripts/check.mjs --json             Machine-readable output to stdout
+ *   node scripts/check.mjs --bail             Stop at the first failure
  *   node scripts/check.mjs --only types,lint
  *   node scripts/check.mjs --skip docs,spell
+ *   node scripts/check.mjs --include mutation  Add opt-in checks on top of the default set
+ *   node scripts/check.mjs --all               Run every check, including opt-in ones
  *
  * Exit codes:
  *   0  all checks passed
@@ -77,11 +79,26 @@ const CHECKS = [
     output_file: null, // vitest writes its own file via --outputFile
   },
   {
+    name: 'mutation',
+    description: 'Stryker mutation testing (incremental)',
+    command: 'pnpm',
+    args: ['exec', 'stryker', 'run'],
+    output_file: null, // stryker's jsonReporter writes .check/mutation.json directly
+    opt_in: true,
+  },
+  {
     name: 'docs',
     description: 'Markdown linting',
     command: 'pnpm',
     args: ['exec', 'markdownlint-cli2'],
     output_file: null,
+  },
+  {
+    name: 'links',
+    description: 'Relative markdown link targets exist on disk',
+    command: 'node',
+    args: ['scripts/check-links.mjs'],
+    output_file: 'links.json',
   },
   {
     name: 'spell',
@@ -162,11 +179,13 @@ function parse_list(value) {
   return value.split(',').map((s) => s.trim()).filter(Boolean);
 }
 
-function select_checks(all, only, skip) {
+function select_checks(all, only, skip, include, runAll) {
   const skipSet = new Set(skip ?? []);
+  const includeSet = new Set(include ?? []);
   return all.filter((c) => {
-    if (only && !only.includes(c.name)) return false;
+    if (only) return only.includes(c.name);
     if (skipSet.has(c.name)) return false;
+    if (c.opt_in && !runAll && !includeSet.has(c.name)) return false;
     return true;
   });
 }
@@ -189,6 +208,8 @@ async function main() {
       json: { type: 'boolean', default: false },
       only: { type: 'string' },
       skip: { type: 'string' },
+      include: { type: 'string' },
+      all: { type: 'boolean', default: false },
     },
   });
 
@@ -196,7 +217,8 @@ async function main() {
 
   const only = parse_list(values.only);
   const skip = parse_list(values.skip);
-  const selected = select_checks(CHECKS, only, skip);
+  const include = parse_list(values.include);
+  const selected = select_checks(CHECKS, only, skip, include, values.all);
 
   if (!values.json) {
     write_line(process.stderr, `\nRunning ${selected.length} check(s)...\n`);

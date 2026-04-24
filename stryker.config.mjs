@@ -1,15 +1,22 @@
 /**
  * Stryker mutation testing config.
- * Run via `pnpm check:mutation`. Slower than unit tests, so runs on demand or scheduled.
+ *
+ * Invoked by the opt-in `mutation` step of `scripts/check.mjs` (and directly via
+ * `pnpm check:mutation`). Incremental mode keeps re-runs cheap — the shared
+ * baseline at `stryker.incremental.json` is committed so every contributor
+ * and CI start from the same state.
  */
 export default {
   packageManager: 'pnpm',
   testRunner: 'vitest',
+  plugins: ['@stryker-mutator/vitest-runner'],
   reporters: ['clear-text', 'html', 'json'],
   htmlReporter: { fileName: '.check/mutation/report.html' },
-  jsonReporter: { fileName: '.check/mutation/report.json' },
+  jsonReporter: { fileName: '.check/mutation.json' },
   mutate: ['packages/*/src/**/*.ts', '!packages/*/src/**/*.test.ts', '!packages/*/src/**/*.spec.ts'],
   coverageAnalysis: 'perTest',
+  incremental: true,
+  incrementalFile: 'stryker.incremental.json',
   thresholds: {
     high: 80,
     low: 60,

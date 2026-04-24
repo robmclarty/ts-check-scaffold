@@ -1,48 +1,26 @@
 # ts-check-scaffold
 
-A minimal TypeScript/Node scaffold with a modern, agent-friendly `check` pipeline already wired up. Clone, rename, install, go.
-
-Ships as a pnpm workspace monorepo. The first package lives at `packages/core/`; add more under `packages/*/` as the codebase grows.
+A TypeScript/Node pnpm workspace scaffold with an agent-friendly `check` pipeline wired up. Clone, rename, install, build.
 
 ## Layout
 
 ```text
 ├── packages/
-│   └── core/                 one package; add more as siblings
+│   └── core/                 add more as siblings
 │       ├── package.json      name "@repo/core", private, exports ./src/index.ts
 │       └── src/
-│           ├── index.ts      public surface
+│           ├── index.ts
 │           └── example.{ts,test.ts}
 ├── rules/                    ast-grep structural rules
 ├── scripts/check.mjs         the check orchestrator
-├── pnpm-workspace.yaml       declares packages/*
-├── tsconfig.json             strict TS, globs packages/*/src/**
+├── pnpm-workspace.yaml
+├── tsconfig.json
 ├── fallow.toml  vitest.config.ts  stryker.config.mjs  cspell.json  sgconfig.yml
-├── AGENTS.md  CLAUDE.md      agent contracts
-└── package.json              scripts + all devDependencies live here
+├── AGENTS.md  CLAUDE.md
+└── package.json              all devDependencies live here
 ```
 
-All tooling runs from the root and globs across `packages/*/src/**`. Runtime dependencies live in the package that imports them; devDependencies live at the root. Cross-package imports go through workspace names (`@repo/other`), not relative paths.
-
-## What you get
-
-One command, `pnpm check`, that is the single source of truth for "is this done?". It runs:
-
-| Check    | Tool                           | Catches                                                      |
-| -------- | ------------------------------ | ------------------------------------------------------------ |
-| `types`  | `tsc`                          | Type errors (ground truth)                                   |
-| `lint`   | `oxlint` + `oxlint-tsgolint`   | Syntax rules, floating promises, unsafe any, and 50+ type-aware rules |
-| `struct` | `ast-grep`                     | Project-specific structural rules (see `rules/`)             |
-| `dead`   | `fallow`                       | Unused exports/files/deps, circular deps, duplication, complexity hotspots, architecture boundary violations |
-| `test`   | `vitest` + `@vitest/coverage-v8` | Unit test failures and coverage below thresholds           |
-| `docs`   | `markdownlint-cli2`            | Broken markdown                                              |
-| `spell`  | `cspell`                       | Misspellings in source and docs                              |
-
-Run deeper passes on demand:
-
-- `pnpm check:mutation` runs Stryker mutation testing (slower; validates that tests actually test something)
-- `pnpm check:security` runs `pnpm audit`
-- `pnpm check:fix` auto-fixes oxlint and fallow issues where possible
+Runtime deps live in the package that imports them. DevDeps live at the root. Cross-package imports use workspace names (`@repo/other`), not relative paths.
 
 ## Quick start
 
@@ -51,84 +29,33 @@ pnpm install
 pnpm check
 ```
 
-Output lands in `.check/`:
+## The check
 
-- `.check/summary.json` — aggregate result for agents
-- `.check/lint.json`, `.check/dead.json`, `.check/struct.json`, `.check/test.json` — raw per-tool JSON
-- `.check/coverage/` — vitest coverage report
+`pnpm check` is the single source of truth for "is this done?". It runs:
 
-## How agents should use this
+| Check    | Tool                             | Catches                                             |
+| -------- | -------------------------------- | --------------------------------------------------- |
+| `types`  | `tsc`                            | Type errors                                         |
+| `lint`   | `oxlint` + `oxlint-tsgolint`     | Syntax, floating promises, unsafe any, type-aware   |
+| `struct` | `ast-grep`                       | Structural rules in `rules/`                        |
+| `dead`   | `fallow`                         | Unused code, circular deps, duplication, boundaries |
+| `test`   | `vitest` + `@vitest/coverage-v8` | Test failures and coverage floors                   |
+| `docs`   | `markdownlint-cli2`              | Broken markdown                                     |
+| `spell`  | `cspell`                         | Misspellings                                        |
 
-The contract is simple: **if `pnpm check` exits 0, the work is done. If it exits non-zero, read `.check/summary.json` to see which checks failed, then read the corresponding tool JSON for diagnostics.**
+On-demand:
 
-```jsonc
-// .check/summary.json
-{
-  "timestamp": "2026-04-19T...",
-  "ok": false,
-  "total_duration_ms": 4821,
-  "checks": [
-    { "name": "types", "ok": true,  "exit_code": 0, "duration_ms": 1200, "output_file": null },
-    { "name": "lint",  "ok": false, "exit_code": 1, "duration_ms": 340,  "output_file": "lint.json" },
-    // ...
-  ]
-}
-```
+- `pnpm check:mutation` — Stryker mutation testing
+- `pnpm check:security` — `pnpm audit`
+- `pnpm check:fix` — auto-fix oxlint and fallow where possible
 
-Flags for agent use:
+Output lands in `.check/`: `summary.json` (aggregate), `<name>.json` (per tool), `coverage/` (vitest).
 
-- `pnpm check --json` — machine-readable to stdout, no human decoration
-- `pnpm check --bail` — stop at the first failure (tighter feedback loop)
-- `pnpm check --only types,lint` — run a subset during iteration
-- `pnpm check --skip spell,docs` — skip slow or currently-noisy checks
+Flags: `--json`, `--bail`, `--only <list>`, `--skip <list>`.
 
-## Working across packages
+## Extending
 
-`pnpm check` always runs over the whole workspace — that's the shipping gate, and it's cheap enough to keep that way. For tighter per-package loops while iterating:
-
-```bash
-pnpm --filter @repo/core test          # run one package's tests
-pnpm --filter @repo/core add zod       # add a runtime dep to one package
-pnpm add -w -D typescript@latest       # upgrade a root devDependency
-```
-
-To add an inter-package dependency, use the workspace protocol:
-
-```bash
-pnpm --filter @repo/app add @repo/core --workspace
-```
-
-## Fallow MCP server
-
-`.mcp.json` configures `fallow-mcp` so Claude Code / Cursor / Windsurf can call fallow as a structured tool (`analyze`, `check_changed`, `find_dupes`, `check_health`, `fix_preview`, `fix_apply`, `project_info`). Agents get structured diagnostics with `auto_fixable` flags and can self-correct without parsing terminal output.
-
-To enable in Claude Code, the `.mcp.json` in the repo root is picked up automatically. Confirm with `claude mcp list`.
-
-## Extending the scaffold
-
-**Add a check.** Edit `scripts/check.mjs` and append to `CHECKS`:
-
-```js
-{
-  name: 'agent',
-  description: 'agnix: AI config linting (CLAUDE.md, SKILL.md, hooks)',
-  command: 'pnpm',
-  args: ['exec', 'agnix', '--format', 'json', '.'],
-  output_file: 'agent.json',
-},
-```
-
-**Add a structural rule.** Drop a YAML file into `rules/`. See `rules/no-class.yml` and `rules/no-default-export.yml` for examples. ast-grep picks it up automatically.
-
-**Add an architecture boundary.** Edit `fallow.toml`:
-
-```toml
-[[boundaries.rules]]
-from = "packages/*/src/**"
-cannotImport = ["../*/src/**"]  # no cross-package relative imports; use workspace names
-```
-
-**Add a package.** Create two files and run install:
+**Add a package.** Create the two files, then `pnpm install && pnpm check`:
 
 ```jsonc
 // packages/<name>/package.json
@@ -146,21 +73,23 @@ cannotImport = ["../*/src/**"]  # no cross-package relative imports; use workspa
 export {};
 ```
 
-Then `pnpm install` (to wire the symlink into `node_modules`) and `pnpm check`. No tool-config edits: `tsconfig.json`, `vitest.config.ts`, `fallow.toml`, `cspell.json`, `stryker.config.mjs`, and `rules/` already glob across `packages/*/src/**`.
+Root configs already glob `packages/*/src/**`.
 
-**Tighten a rule.** Each tool's config lives at the repo root (`.oxlintrc.json`, `fallow.toml`, `stryker.config.mjs`, `sgconfig.yml`, etc). No wrapper configs, no magic.
+**Add a check.** Append to `CHECKS` in `scripts/check.mjs`.
 
-## Philosophy
+**Add a structural rule.** Drop a YAML file in `rules/`. ast-grep picks it up.
 
-Four principles drive every choice here:
+**Add a boundary.** Edit `fallow.toml`.
 
-1. **The check is the contract.** A single command the agent can trust. No hidden CI gates, no "oh also run this."
-2. **Structured output over stderr chatter.** Every JSON-capable tool is configured to emit JSON. Agents parse structured data, not colorized text.
-3. **The orchestrator is dumb.** It shells out, captures exit codes, and writes files. It does not parse diagnostics. If a tool evolves its output, the orchestrator does not care.
-4. **Tools, not frameworks.** Each tool is independently swappable. If something better than oxlint ships next year, you change one line in `CHECKS`.
+## Working across packages
 
-## Related docs
+```bash
+pnpm --filter @repo/core test                   # one package's tests
+pnpm --filter @repo/core add zod                # runtime dep to one package
+pnpm add -w -D typescript@latest                # root devDep
+pnpm --filter @repo/app add @repo/core --workspace
+```
 
-- [UPGRADE.md](./UPGRADE.md) — version tracking and tool migration notes
-- [AGENTS.md](./AGENTS.md) — instructions for any coding agent working in this repo
-- [CLAUDE.md](./CLAUDE.md) — Claude-specific instructions
+## Fallow MCP
+
+`.mcp.json` exposes fallow to Claude Code, Cursor, and Windsurf as a structured tool. Confirm with `claude mcp list`.

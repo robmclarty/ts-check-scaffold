@@ -81,6 +81,19 @@ Root configs already glob `packages/*/src/**`.
 
 **Add a boundary.** Edit `fallow.toml`.
 
+## Cutting a release
+
+Every package version moves in lockstep with the root `package.json`. The `/version` Claude Code skill (see `.claude/skills/version/`) drives the release:
+
+```text
+/version patch            # 0.1.0 → 0.1.1, updates CHANGELOG.md, commits vX.Y.Z, tags
+/version minor            # 0.1.0 → 0.2.0
+/version major            # 0.1.0 → 1.0.0
+/version patch --repair-skew   # force-align workspace to the root's current version (no bump)
+```
+
+The backend (`scripts/bump-version.mjs` + `scripts/lib/lockstep.mjs`) auto-discovers the lockstep set: root `package.json`, every `packages/*/package.json`, and every `packages/*/src/version.ts` that declares `export const version = '<SEMVER>';`. Packages opt into the `version.ts` half by creating the file — no edits to the scripts required as you add packages.
+
 ## Working across packages
 
 ```bash

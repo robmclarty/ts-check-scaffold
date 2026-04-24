@@ -20,10 +20,6 @@ This file only adds what is Claude-specific.
 - **fallow MCP server** is wired up in `.mcp.json`. Prefer calling fallow tools (`analyze`, `check_changed`) during implementation over waiting for the final `pnpm check`.
 - **Don't shell out to run `pnpm check` repeatedly during tight loops.** Use `pnpm check --bail --only <relevant checks>` or `pnpm exec tsc --noEmit` for faster iteration. Run the full `pnpm check` once at the end.
 
-## Specs
-
-If `.specs/` contains a spec relevant to the task, treat it as the contract. If your implementation diverges from the spec, update the spec first and explain why.
-
 ## What Claude should avoid
 
 - Do not add comments that narrate what the code does ("// loop through users"). Comments explain *why*, not *what*.

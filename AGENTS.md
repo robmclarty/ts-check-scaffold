@@ -47,10 +47,6 @@ This is a pnpm workspace. Source lives under `packages/<name>/src/`, never at th
 - **Adding a package:** create `packages/<name>/package.json` (name `@repo/<name>`, `type: module`, `private: true`, `exports`) and `packages/<name>/src/index.ts`. No other files required. `pnpm check` must still exit 0 after adding it.
 - **No per-package configs yet.** Root `tsconfig.json`, `vitest.config.ts`, `fallow.toml`, `cspell.json`, `stryker.config.mjs`, and `rules/` glob across `packages/*/src/**`. Add a per-package override only when one package genuinely needs different behavior.
 
-## Specs
-
-When a task is non-trivial, look in `.specs/` for an existing spec or be prepared to write one. See `.specs/README.md`. Specs are the canonical source of truth for intent; code is a derived artifact.
-
 ## What NOT to do
 
 - Do not disable lint rules to pass the check. If a rule is wrong for a case, discuss first or use a scoped inline suppression with a comment explaining why.

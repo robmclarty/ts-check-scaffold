@@ -15,7 +15,6 @@ Ships as a pnpm workspace monorepo. The first package lives at `packages/core/`;
 │           └── example.{ts,test.ts}
 ├── rules/                    ast-grep structural rules
 ├── scripts/check.mjs         the check orchestrator
-├── .specs/                   specs (canonical intent, code is derived)
 ├── pnpm-workspace.yaml       declares packages/*
 ├── tsconfig.json             strict TS, globs packages/*/src/**
 ├── fallow.toml  vitest.config.ts  stryker.config.mjs  cspell.json  sgconfig.yml
@@ -165,4 +164,3 @@ Four principles drive every choice here:
 - [UPGRADE.md](./UPGRADE.md) — version tracking and tool migration notes
 - [AGENTS.md](./AGENTS.md) — instructions for any coding agent working in this repo
 - [CLAUDE.md](./CLAUDE.md) — Claude-specific instructions
-- [.specs/README.md](./.specs/README.md) — spec-driven development conventions
